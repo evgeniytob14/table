@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rust Price Tracker</title>
+    <!-- Шрифты -->
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;700&family=Orbitron:wght@500&display=swap" rel="stylesheet">
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Favicon -->
+    <link rel="icon" href="https://i.imgur.com/6aYmX9p.png" type="image/png">
+    <style>
+        :root {
+            /* Цветовая палитра Rust */
+            --rust-dark: #2C2727;
+            --rust-metal: #3A3226;
+            --rust-orange: #E67E22;
+            --rust-light: #D5D0CD;
+            --rust-red: #A23829;
+            --rust-blue: #2C3E50;
+        }
+
+        body {
+            background: 
+                linear-gradient(rgba(44, 39, 39, 0.9), rgba(44, 39, 39, 0.9)),
+                url('https://i.imgur.com/JjQZQ9m.jpg') no-repeat center center fixed;
+            background-size: cover;
+            color: var(--rust-light);
+            font-family: 'Rajdhani', sans-serif;
+            min-height: 100vh;
+        }
+
+        /* Шапка */
+        .header {
+            background: linear-gradient(to right, var(--rust-metal), var(--rust-dark));
+            border-bottom: 3px solid var(--rust-orange);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            text-shadow: 1px 1px 2px #000;
+            padding: 1.5rem 0;
+            margin-bottom: 2rem;
+            border-radius: 0;
+        }
+
+        .header-title {
+            color: var(--rust-orange);
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Карточки */
+        .card {
+            background: rgba(58, 50, 38, 0.85);
+            border: 1px solid var(--rust-orange);
+            border-radius: 0;
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.4);
+            margin-bottom: 1.5rem;
+        }
+
+        .card-header {
+            background: rgba(44, 39, 39, 0.9);
+            border-bottom: 1px solid var(--rust-orange);
+            padding: 0.75rem 1.25rem;
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        /* Кнопки */
+        .btn-primary {
+            background: linear-gradient(to bottom, var(--rust-orange), #C56A1A);
+            border: none;
+            color: #000;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 0.5rem 1.5rem;
+            transition: all 0.3s;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(to bottom, #F39C12, #E67E22);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(230, 126, 34, 0.3);
+        }
+
+        .btn-outline-secondary {
+            border-color: var(--rust-orange);
+            color: var(--rust-orange);
+        }
+
+        .btn-outline-secondary:hover {
+            background: var(--rust-orange);
+            color: #000;
+        }
+
+        /* Таблица */
+        .table {
+            background: rgba(44, 39, 39, 0.7);
+            border: 2px solid var(--rust-metal);
+            color: var(--rust-light);
+        }
+
+        .table th {
+            background: var(--rust-dark);
+            color: var(--rust-orange);
+            border-bottom: 2px solid var(--rust-orange);
+            font-family: 'Orbitron', sans-serif;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+        }
+
+        .table td {
+            border-top: 1px solid var(--rust-metal);
+            padding: 12px;
+            vertical-align: middle;
+        }
+
+        .table-hover tbody tr:hover td {
+            background: rgba(166, 50, 29, 0.2);
+        }
+
+        /* Элементы интерфейса */
+        .form-control, .form-select {
+            background: rgba(44, 39, 39, 0.8);
+            border: 1px solid var(--rust-metal);
+            color: var(--rust-light);
+            border-radius: 0;
+        }
+
+        .form-control:focus, .form-select:focus {
+            background: rgba(44, 39, 39, 0.9);
+            border-color: var(--rust-orange);
+            box-shadow: 0 0 0 0.25rem rgba(230, 126, 34, 0.25);
+            color: var(--rust-light);
+        }
+
+        .input-group-text {
+            background: var(--rust-dark);
+            border: 1px solid var(--rust-metal);
+            color: var(--rust-orange);
+        }
+
+        /* Специальные классы */
+        .profit-high {
+            background: rgba(166, 50, 29, 0.15);
+            position: relative;
+        }
+
+        .profit-high::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 100%;
+            background: linear-gradient(90deg, 
+                transparent, 
+                rgba(230, 126, 34, 0.1), 
+                transparent);
+            pointer-events: none;
+        }
+
+        .rust-stock {
+            color: var(--rust-light);
+            opacity: 0.8;
+            font-size: 0.8rem;
+        }
+
+        .rust-profit {
+            color: var(--rust-orange);
+            font-weight: bold;
+        }
+
+        /* Анимации */
+        @keyframes rust-pulse {
+            0% { opacity: 0.7; }
+            50% { opacity: 1; }
+            100% { opacity: 0.7; }
+        }
+
+        .rust-alert {
+            animation: rust-pulse 2s infinite;
+            color: var(--rust-orange);
+        }
+
+        /* Кнопка обмена */
+        .swap-sites-btn {
+            background: var(--rust-orange);
+            color: #000;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+
+        .swap-sites-btn:hover {
+            background: #F39C12;
+            transform: rotate(180deg) scale(1.1);
+        }
+
+        /* Загрузка */
+        #loadingSpinner .spinner-border {
+            color: var(--rust-orange);
+        }
+
+        /* Уведомления */
+        .toast {
+            background: rgba(58, 50, 38, 0.95);
+            border: 1px solid var(--rust-orange);
+            color: var(--rust-light);
+        }
+
+        .toast-header {
+            background: rgba(44, 39, 39, 0.9);
+            border-bottom: 1px solid var(--rust-orange);
+            color: var(--rust-orange);
+            font-family: 'Orbitron', sans-serif;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="container text-center">
+            <h1 class="header-title">Rust Price Tracker</h1>
+            <div class="mt-2">
+                <a href="/all-prices.html" class="btn btn-sm btn-outline-light">
+                    <i class="fas fa-list me-1"></i>Сравнение на всех площадках
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <div class="container mt-2">
+        <div class="card mb-3">
+            <div class="card-body py-2">
+                <div class="row g-2 align-items-center">
+                    <div class="col-md-5">
+                        <div class="site-selector">
+                            <select id="site1" class="form-select">
+                                <option value="">Загрузка площадок...</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-2 text-center">
+                        <button id="swapSitesBtn" class="swap-sites-btn mx-auto" title="Поменять местами">
+                            <i class="fas fa-exchange-alt"></i>
+                        </button>
+                    </div>
+                    <div class="col-md-5">
+                        <div class="site-selector">
+                            <select id="site2" class="form-select">
+                                <option value="">Загрузка площадок...</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-3 d-flex justify-content-between align-items-center">
+                    <button id="compareBtn" class="btn btn-primary">
+                        <i class="fas fa-exchange-alt me-2"></i>Сравнить
+                    </button>
+                    <div class="d-flex align-items-center">
+                        <div class="form-check form-switch me-3">
+                            <input class="form-check-input" type="checkbox" id="autoRefreshToggle">
+                            <label class="form-check-label" for="autoRefreshToggle">Авто-обновление</label>
+                        </div>
+                        <input type="number" id="autoRefreshInterval" class="form-control form-control-sm" style="width: 70px;" value="30" min="5" max="300">
+                        <span class="ms-1">сек</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header d-flex justify-content-between align-items-center py-2">
+                <h5 class="mb-0"><i class="fas fa-filter me-2"></i>Фильтры</h5>
+                <button id="toggleFilters" class="btn btn-sm btn-outline-secondary">
+                    <i class="fas fa-eye me-1"></i>Показать
+                </button>
+            </div>
+            <div class="card-body py-2" id="filtersContainer" style="display: none;">
+                <div class="row mb-2">
+                    <div class="col-md-6">
+                        <label>Цена на <span id="site1HeaderSmall">Площадка 1</span> ($)</label>
+                        <div class="input-group">
+                            <span class="input-group-text">От</span>
+                            <input type="number" id="price1Min" class="form-control" placeholder="Мин">
+                            <span class="input-group-text">До</span>
+                            <input type="number" id="price1Max" class="form-control" placeholder="Макс">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label>Цена на <span id="site2HeaderSmall">Площадка 2</span> ($)</label>
+                        <div class="input-group">
+                            <span class="input-group-text">От</span>
+                            <input type="number" id="price2Min" class="form-control" placeholder="Мин">
+                            <span class="input-group-text">До</span>
+                            <input type="number" id="price2Max" class="form-control" placeholder="Макс">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row mb-2">
+                    <div class="col-md-6">
+                        <label>Наличие на <span id="site1HeaderSmall">Площадка 1</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text">От</span>
+                            <input type="number" id="stock1Min" class="form-control" placeholder="Мин">
+                            <span class="input-group-text">До</span>
+                            <input type="number" id="stock1Max" class="form-control" placeholder="Макс">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label>Наличие на <span id="site2HeaderSmall">Площадка 2</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text">От</span>
+                            <input type="number" id="stock2Min" class="form-control" placeholder="Мин">
+                            <span class="input-group-text">До</span>
+                            <input type="number" id="stock2Max" class="form-control" placeholder="Макс">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <label>Прибыль (%)</label>
+                        <div class="input-group">
+                            <span class="input-group-text">От</span>
+                            <input type="number" id="profitPercentMin" class="form-control" placeholder="Мин">
+                            <span class="input-group-text">До</span>
+                            <input type="number" id="profitPercentMax" class="form-control" placeholder="Макс">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-check mt-4 pt-2">
+                            <input class="form-check-input" type="checkbox" id="hideOverstock">
+                            <label class="form-check-label" for="hideOverstock">Скрыть перезапас</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+		
+		<div class="card mb-3">
+  <div class="card-header d-flex justify-content-between align-items-center py-2">
+    <h5 class="mb-0"><i class="fas fa-plug me-2"></i>Статус парсеров</h5>
+    <button id="toggleParsersStatus" class="btn btn-sm btn-outline-secondary">
+      <i class="fas fa-eye me-1"></i>Показать
+    </button>
+  </div>
+  <div class="card-body py-2" id="parsersStatusContainer" style="display: none;">
+    <div class="text-center py-3">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Загрузка...</span>
+      </div>
+    </div>
+  </div>
+</div>
+        
+        <div class="card mb-3">
+            <div class="card-header d-flex justify-content-between align-items-center py-2">
+                <h5 class="mb-0"><i class="fas fa-bell me-2"></i>Уведомления в Telegram</h5>
+                <button id="toggleProfiles" class="btn btn-sm btn-outline-secondary">
+                    <i class="fas fa-eye me-1"></i>Показать
+                </button>
+            </div>
+            <div class="card-body py-2" id="profilesContainer" style="display: none;">
+                <div id="profilesList" class="mb-3"></div>
+                <button id="addProfileBtn" class="btn btn-primary btn-sm">
+                    <i class="fas fa-plus me-1"></i>Добавить профиль
+                </button>
+                
+                <div id="profileFormContainer" class="mt-3" style="display: none;">
+                    <div class="card">
+                        <div class="card-body">
+                            <form id="profileForm">
+                                <input type="hidden" id="profileId">
+                                <div class="mb-3">
+                                    <label class="form-label">Название профиля</label>
+                                    <input type="text" id="profileName" class="form-control" required>
+                                </div>
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Первая площадка</label>
+                                        <select id="profileSite1" class="form-select" required></select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Вторая площадка</label>
+                                        <select id="profileSite2" class="form-select" required></select>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Минимальный процент прибыли</label>
+                                    <input type="number" id="profileMinProfit" class="form-control" min="0" step="0.1" required>
+                                </div>
+                                <div class="mb-3 form-check">
+                                    <input type="checkbox" id="profileHideOverstock" class="form-check-input">
+                                    <label class="form-check-label">Скрывать перезапас</label>
+                                </div>
+                                <div class="mb-3 form-check">
+                                    <input type="checkbox" id="profileTelegramEnabled" class="form-check-input">
+                                    <label class="form-check-label">Включить уведомления в Telegram</label>
+                                </div>
+                                <div class="mb-3 form-check">
+                                    <input type="checkbox" id="profileIsActive" class="form-check-input" checked>
+                                    <label class="form-check-label">Профиль активен</label>
+                                </div>
+                                <div class="d-flex justify-content-end gap-2">
+                                    <button type="button" id="cancelProfileBtn" class="btn btn-outline-secondary">Отмена</button>
+                                    <button type="submit" class="btn btn-primary">Сохранить</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mb-2 g-2">
+            <div class="col-md-9">
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                    <input type="text" id="searchInput" class="form-control" placeholder="Поиск предметов...">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <select id="sortBy" class="form-select">
+                    <option value="profitPercent">По прибыли %</option>
+                    <option value="name">По названию</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="position-relative">
+            <div id="loadingSpinner" class="d-none position-absolute top-50 start-50 translate-middle">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Загрузка...</span>
+                </div>
+            </div>
+            
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>Предмет</th>
+                            <th id="site1Header">Площадка 1</th>
+                            <th id="site2Header">Площадка 2</th>
+                            <th>Прибыль (%)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="resultsTable">
+                        <tr>
+                            <td colspan="4" class="text-center py-4">Выберите площадки и нажмите "Сравнить"</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="mt-3 text-center text-muted small">
+            <p>Данные обновляются автоматически. Последнее обновление: <span id="lastUpdateFooter">никогда</span></p>
+            <p id="lastUpdate" class="d-none"></p>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom JS -->
+    <script src="/js/app.js"></script>
+</body>
+</html>
